@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="form-page-wrapper">
+    <div class="form-card">
+
+        <div class="form-card-header">
+            <div class="form-card-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+            </div>
+            <div>
+                <h2 class="form-card-title">Edit Credential</h2>
+                <p class="form-card-subtitle">Update your saved login details</p>
+            </div>
+        </div>
+
+        <!-- FIX: enctype added for file uploads -->
+        <form method="post" enctype="multipart/form-data" class="vault-form">
+            {% csrf_token %}
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="website">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="2" y1="12" x2="22" y2="12"/>
+                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                        </svg>
+                        Website / Service
+                    </label>
+                    <!-- item.title is safe — it's not encrypted -->
+                    <input type="text" name="title" id="website"
+                           value="{{ item.title }}" required class="form-input">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="vault_username">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                        Username / Email
+                    </label>
+                    <!-- FIX: was {{ item.username }} — now {{ username }} from context -->
+                    <input type="text" name="username" id="vault_username"
+                           value="{{ username }}" class="form-input">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="vault_password">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                        </svg>
+                        Password
+                    </label>
+                    <div class="input-password-wrapper">
+                        <!-- FIX: was {{ item.password }} — now {{ password }} from context -->
+                        <input type="password" name="password" id="vault_password"
+                               value="{{ password }}" required class="form-input">
+                        <button type="button" class="toggle-password"
+                                onclick="togglePassword('vault_password', this)" tabindex="-1">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="vault_notes">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                        </svg>
+                        Notes <span class="optional-badge">Optional</span>
+                    </label>
+                    <!-- FIX: was {{ item.content }} — now {{ notes }} from context -->
+                    <textarea name="content" id="vault_notes" rows="3"
+                              class="form-input form-textarea">{{ notes }}</textarea>
+                </div>
+            </div>
+
+            <!-- Existing attached files -->
+            {% if files %}
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Current Attachments</label>
+                    <div class="file-chips">
+                        {% for f in files %}
+                        <div class="file-chip">
+                            <span class="file-chip-icon">📎</span>
+                            <a href="{{ f.file.url }}" target="_blank" class="file-chip-name">{{ f.filename }}</a>
+                            <form method="post" action="{% url 'delete_file' f.id %}"
+                                  style="display:inline;" onsubmit="return confirm('Remove this file?')">
+                                {% csrf_token %}
+                                <button type="submit" class="file-chip-del" title="Remove">×</button>
+                            </form>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Add new files -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="attachments">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66L9.41 17.41a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+                        </svg>
+                        Add More Files <span class="optional-badge">Optional</span>
+                    </label>
+                    <input type="file" name="attachments" id="attachments"
+                           multiple
+                           accept=".pdf,.doc,.docx,.xlsx,.jpg,.jpeg,.png,.mp4"
+                           class="form-input file-input">
+                    <span class="field-hint">Supported: PDF, DOC, XLSX, JPG, PNG, MP4</span>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <a href="{% url 'dashboard' %}" class="btn-secondary">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="19" y1="12" x2="5" y2="12"/>
+                        <polyline points="12 19 5 12 12 5"/>
+                    </svg>
+                    Cancel
+                </a>
+                <button type="submit" class="btn-primary">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                        <polyline points="17 21 17 13 7 13 7 21"/>
+                        <polyline points="7 3 7 8 15 8"/>
+                    </svg>
+                    Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function togglePassword(fieldId, btn) {
+    const field = document.getElementById(fieldId);
+    if (!field) return;
+    field.type = field.type === 'password' ? 'text' : 'password';
+    btn.classList.toggle('active');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,29 @@
+# Environment
+.env
+.venv/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Database
+db.sqlite3
+
+# Static and media
+media/
+staticfiles/
+
+# IDE
+.idea/
+
+# Virtual env config
+pyvenv.cfg
+
+# Django migrations (optional — keep if you want migrations tracked)
+# */migrations/
+
+# OS files
+.DS_Store
+Thumbs.db
